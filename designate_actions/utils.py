@@ -7,9 +7,10 @@ from oslo_log import log
 LOG = log.getLogger(__name__)
 
 
-def get_session(context):
+def get_session(context, version='v2'):
     """Get designate session
     :param context: action context
+    :param version: an API version of dns service
     :return: session object
     """
 
@@ -22,7 +23,7 @@ def get_session(context):
     endpoints = search('[?type == `dns`].endpoints[]', catalog)
     endpoint = search('[?interface == `public`].url', endpoints)[0]
 
-    endpoint = endpoint + 'v2/'
+    endpoint = endpoint + version + '/'
     auth = Token(endpoint=endpoint,
                  token=auth_token)
 

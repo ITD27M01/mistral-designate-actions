@@ -1,0 +1,76 @@
+from mistral_lib import actions
+from designateclient.v2 import client
+from oslo_log import log
+
+from designate_actions import utils
+
+
+LOG = log.getLogger(__name__)
+
+
+class ZonesList(actions.Action):
+    """Action to get zones
+    :param dict filters: An optional dict of filters to only show zones
+    :return: A list of zones in project
+    """
+    def __init__(self, filters=None):
+        self.filters = filters
+
+    def run(self, context):
+        LOG.debug("Running zone_list action")
+
+        session = utils.get_session(context)
+        designate = client.Client(
+            session=session
+        )
+
+        LOG.debug("List zones by filters: %s" % self.filters)
+        zones = designate.zones.list(criterion=self.filters)
+        return list(zones)
+
+    def test(self, context):
+        LOG.debug("Running zone_list action in dry-run mode")
+        return []
+
+
+class ZoneCreate(actions.Action):
+    """Action to get zones
+    :param str name: A name for new zone
+    :param str email: Email of root for new zone
+    :param str ttl: The time to live for cached records
+    :param str description: Optional description for zone (can be used as filters for list)
+    :param list masters: Mandatory for secondary zones. The servers to slave from to get DNS information
+    :param str zone_type: Type of zone. Defaults to PRIMARY
+    :param dict attributes: Key:Value pairs of information about this zone
+    :return: A list of zones in project
+    """
+    def __init__(self, name, email, ttl=None, description=None, masters=None, zone_type=None, attributes=None):
+        self.name = name
+        self.email = email
+        self.ttl = ttl
+        self.description = description
+        self.masters = masters
+        self.zone_type = zone_type
+        self.attributes = attributes
+
+    def run(self, context):
+        LOG.debug("Running zone_create action")
+
+        session = utils.get_session(context)
+        designate = client.Client(
+            session=session
+        )
+
+        LOG.debug("Create zone %s" % self.name)
+        zone = designate.zones.create(name=self.name,
+                                      email=self.email,
+                                      ttl=self.ttl,
+                                      type_=self.zone_type, masters=self.masters,
+                                      attributes=self.attributes, description=self.description)
+
+        return dict(zone)
+
+    def test(self, context):
+        LOG.debug("Running zone_list action in dry-run mode")
+        LOG.debug("Create zone %s" % self.name)
+        return {}
