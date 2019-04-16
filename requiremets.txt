@@ -1,0 +1,4 @@
+mistral_lib
+python-designateclient
+oslo_log
+jmespath
