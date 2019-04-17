@@ -1,8 +1,7 @@
 from mistral_lib import actions
-from designateclient.v2 import client
 from oslo_log import log
 
-from designate_actions import utils
+from designate_actions.utils import get_client
 
 
 LOG = log.getLogger(__name__)
@@ -21,15 +20,12 @@ class RecordsetsList(actions.Action):
 
     def run(self, context):
         LOG.debug("Running recordsets_list action")
-        session = utils.get_session(context)
-        designate = client.Client(
-            session=session
-        )
+        designate = get_client(context)
 
         LOG.debug("List recordsets in zone {} by filters: {}".format(self.zone, self.filters))
-        recordsets = designate.recordsets.list(zone=self.zone, criterion=self.filters)
+        recordsets = list(designate.recordsets.list(zone=self.zone, criterion=self.filters))
 
-        return list(recordsets)
+        return recordsets
 
     def test(self, context):
         return []
@@ -50,26 +46,23 @@ class RecordsetCreate(actions.Action):
         self.name = name
         self.records = records
         self.rrtype = rrtype
-        self.description = description
+        self.description = str(description)
 
     def run(self, context):
         LOG.debug("Running recordset_create action")
-        session = utils.get_session(context)
-        designate = client.Client(
-            session=session
-        )
+        designate = get_client(context)
 
         LOG.debug("Create recordset {} in zone {} with data {} and type {}".format(self.name,
                                                                                    self.zone,
                                                                                    self.records,
                                                                                    self.rrtype))
-        recordset = designate.recordsets.create(zone=self.zone,
-                                                name=self.name,
-                                                records=self.records,
-                                                type_=self.rrtype,
-                                                description=self.description)
+        recordset = dict(designate.recordsets.create(zone=self.zone,
+                                                     name=self.name,
+                                                     records=self.records,
+                                                     type_=self.rrtype,
+                                                     description=self.description))
 
-        return dict(recordset)
+        return recordset
 
     def test(self, context):
         return {}
@@ -88,16 +81,13 @@ class RecordsetDelete(actions.Action):
 
     def run(self, context):
         LOG.debug("Running recordset_delete action")
-        session = utils.get_session(context)
-        designate = client.Client(
-            session=session
-        )
+        designate = get_client(context)
 
         LOG.debug("Delete recordset {} from zone {}".format(self.recordset, self.zone))
-        recordset = designate.recordsets.delete(zone=self.zone,
-                                                recordset=self.recordset)
+        recordset = dict(designate.recordsets.delete(zone=self.zone,
+                                                     recordset=self.recordset))
 
-        return dict(recordset)
+        return recordset
 
     def test(self, context):
         return {}
@@ -118,18 +108,18 @@ class RecordsetUpdate(actions.Action):
 
     def run(self, context):
         LOG.debug("Running recordset_update action")
-        session = utils.get_session(context)
-        designate = client.Client(
-            session=session
-        )
+        designate = get_client(context)
 
         LOG.debug("Update recordset {} in zone {} with new data: {}".format(self.recordset,
                                                                             self.zone, self.values))
 
-        recordset = designate.recordsets.update(zone=self.zone,
-                                                recordset=self.recordset,
-                                                values=self.values)
-        return dict(recordset)
+        if 'description' in self.values.keys():
+            self.values['description'] = str(self.values['description'])
+
+        recordset = dict(designate.recordsets.update(zone=self.zone,
+                                                     recordset=self.recordset,
+                                                     values=self.values))
+        return recordset
 
     def test(self, context):
         return {}

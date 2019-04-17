@@ -1,8 +1,7 @@
 from mistral_lib import actions
-from designateclient.v2 import client
 from oslo_log import log
 
-from designate_actions import utils
+from designate_actions.utils import get_client
 
 
 LOG = log.getLogger(__name__)
@@ -19,14 +18,11 @@ class ZonesList(actions.Action):
     def run(self, context):
         LOG.debug("Running zone_list action")
 
-        session = utils.get_session(context)
-        designate = client.Client(
-            session=session
-        )
+        designate = get_client(context)
 
         LOG.debug("List zones by filters: %s" % self.filters)
-        zones = designate.zones.list(criterion=self.filters)
-        return list(zones)
+        zones = list(designate.zones.list(criterion=self.filters))
+        return zones
 
     def test(self, context):
         LOG.debug("Running zone_list action in dry-run mode")
@@ -56,19 +52,16 @@ class ZoneCreate(actions.Action):
     def run(self, context):
         LOG.debug("Running zone_create action")
 
-        session = utils.get_session(context)
-        designate = client.Client(
-            session=session
-        )
+        designate = get_client(context)
 
         LOG.debug("Create zone %s" % self.name)
-        zone = designate.zones.create(name=self.name,
+        zone = dict(designate.zones.create(name=self.name,
                                       email=self.email,
                                       ttl=self.ttl,
                                       type_=self.zone_type, masters=self.masters,
-                                      attributes=self.attributes, description=self.description)
+                                      attributes=self.attributes, description=self.description))
 
-        return dict(zone)
+        return zone
 
     def test(self, context):
         LOG.debug("Running zone_list action in dry-run mode")
