@@ -1,6 +1,7 @@
 CHANGES
 =======
 
+* Consolidate client methods to utils
 * Refactor the module path for suuport future versions. Added recordsets support
 
 0.1.0
