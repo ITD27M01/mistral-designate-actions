@@ -30,8 +30,4 @@ def get_session(context):
 
 
 def get_client(context):
-    designate_client = client.Client(
-            session=get_session(context)
-    )
-
-    return designate_client
+    return client.Client(session=get_session(context))
