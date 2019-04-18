@@ -1,4 +1,4 @@
 mistral_lib
 python-designateclient
-oslo_log
+oslo.log
 jmespath
