@@ -1,6 +1,8 @@
 CHANGES
 =======
 
+* Fix oslo.log requirements
+* Changelog updated
 * Consolidate client methods to utils
 * Refactor the module path for suuport future versions. Added recordsets support
 

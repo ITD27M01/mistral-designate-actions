@@ -56,10 +56,10 @@ class ZoneCreate(actions.Action):
 
         LOG.debug("Create zone %s" % self.name)
         zone = dict(designate.zones.create(name=self.name,
-                                      email=self.email,
-                                      ttl=self.ttl,
-                                      type_=self.zone_type, masters=self.masters,
-                                      attributes=self.attributes, description=self.description))
+                                           email=self.email,
+                                           ttl=self.ttl,
+                                           type_=self.zone_type, masters=self.masters,
+                                           attributes=self.attributes, description=self.description))
 
         return zone
 
