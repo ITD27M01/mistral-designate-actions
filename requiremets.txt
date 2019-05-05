@@ -1,4 +1,4 @@
 mistral_lib
 python-designateclient
+python-keystoneclient
 oslo.log
-jmespath
