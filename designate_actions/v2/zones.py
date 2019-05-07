@@ -10,15 +10,18 @@ LOG = log.getLogger(__name__)
 class ZonesList(actions.Action):
     """Action to get zones
     :param dict filters: An optional dict of filters to only show zones
+    :param bool all_projects: Allows admins (or users with the right role)
+                              to view and edit zones / recordsets for all projects
     :return: A list of zones in project
     """
-    def __init__(self, filters=None):
+    def __init__(self, filters=None, all_projects=False):
         self.filters = filters
+        self.all_projects = all_projects
 
     def run(self, context):
         LOG.debug("Running zone_list action")
 
-        designate = get_client(context)
+        designate = get_client(context, self.all_projects)
 
         LOG.debug("List zones by filters: %s" % self.filters)
         zones = list(designate.zones.list(criterion=self.filters))
@@ -38,9 +41,16 @@ class ZoneCreate(actions.Action):
     :param list masters: Mandatory for secondary zones. The servers to slave from to get DNS information
     :param str zone_type: Type of zone. Defaults to PRIMARY
     :param dict attributes: Key:Value pairs of information about this zone
+    :param bool all_projects: Allows admins (or users with the right role)
+                              to view and edit zones / recordsets for all projects
     :return: A list of zones in project
     """
-    def __init__(self, name, email, ttl=None, description=None, masters=None, zone_type=None, attributes=None):
+    def __init__(self, name, email, ttl=None,
+                 description=None,
+                 masters=None,
+                 zone_type=None,
+                 attributes=None,
+                 all_projects=False):
         self.name = name
         self.email = email
         self.ttl = ttl
@@ -48,11 +58,12 @@ class ZoneCreate(actions.Action):
         self.masters = masters
         self.zone_type = zone_type
         self.attributes = attributes
+        self.all_projects = all_projects
 
     def run(self, context):
         LOG.debug("Running zone_create action")
 
-        designate = get_client(context)
+        designate = get_client(context, self.all_projects)
 
         LOG.debug("Create zone %s" % self.name)
         zone = dict(designate.zones.create(name=self.name,

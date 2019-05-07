@@ -35,5 +35,5 @@ def get_session(context):
     return session.Session(auth=auth)
 
 
-def get_client(context):
-    return client.Client(session=get_session(context))
+def get_client(context, all_projects=False):
+    return client.Client(session=get_session(context), all_projects=all_projects)
