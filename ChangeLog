@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.0.0
+-----
+
+* I have simplified the service catalog get
+* Tox tests
 * Fix oslo.log requirements
 * Changelog updated
 * Consolidate client methods to utils
