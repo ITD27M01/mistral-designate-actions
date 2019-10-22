@@ -1,4 +1,6 @@
 mistral_lib
+mistral
 python-designateclient
 python-keystoneclient
 oslo.log
+oslo.config

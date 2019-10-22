@@ -1,6 +1,11 @@
 CHANGES
 =======
 
+1.1.0
+-----
+
+* Adds all\_project param. Which allows admins (or users with the right role) to view and edit zones / recordsets for all tenants
+
 1.0.0
 -----
 
