@@ -1,5 +1,4 @@
 from designateclient.v2 import client as designate_client
-import keystoneauth1.identity.generic as auth_plugins
 from keystoneauth1 import loading
 from keystoneauth1 import session as ks_session
 from keystoneauth1.token_endpoint import Token
@@ -7,13 +6,14 @@ from keystoneclient import service_catalog as ks_service_catalog
 from keystoneclient.v3 import client as ks_client
 from keystoneclient.v3 import endpoints as ks_endpoints
 from oslo_config import cfg
+from oslo_log import log
 import six
 
 from mistral import context
 from mistral import exceptions
 
 CONF = cfg.CONF
-
+LOG = log.getLogger(__name__)
 
 def client():
     ctx = context.ctx()
@@ -40,41 +40,26 @@ def _determine_verify(ctx):
         return True
 
 
-def get_session_and_auth(ctx, **kwargs):
+def get_session(ctx):
     """Get session and auth parameters.
 
     :param ctx: action context
-    :return: dict to be used as kwargs for client service initialization
+    :return: session object for dns service
     """
 
     if not ctx:
         raise AssertionError('context is mandatory')
 
-    project_endpoint = get_endpoint_for_project(**kwargs)
-    endpoint = format_url(
-        project_endpoint.url,
-        {
-            'tenant_id': ctx.project_id,
-            'project_id': ctx.project_id
-        }
-    )
+    endpoint = get_endpoint(version='v2')
 
     auth = Token(endpoint=endpoint, token=ctx.auth_token)
 
-    auth_uri = ctx.auth_uri or CONF.keystone_authtoken.www_authenticate_uri
-    ks_auth = Token(
-        endpoint=auth_uri,
-        token=ctx.auth_token
-    )
     session = ks_session.Session(
-        auth=ks_auth,
+        auth=auth,
         verify=_determine_verify(ctx)
     )
 
-    return {
-        "session": session,
-        "auth": auth
-    }
+    return session
 
 
 def _admin_client(trust_id=None):
@@ -129,8 +114,8 @@ def client_for_admin():
     return _admin_client()
 
 
-def get_endpoint_for_project(service_name='designate', service_type='dns',
-                             region_name=None):
+def get_endpoint(service_name='designate', service_type='dns',
+                 region_name=None, version='v2'):
     if service_name is None and service_type is None:
         raise exceptions.MistralException(
             "Either 'service_name' or 'service_type' must be provided."
@@ -192,7 +177,7 @@ def get_endpoint_for_project(service_name='designate', service_type='dns',
             % (service_name, service_type, region)
         )
     else:
-        return endpoint
+        return endpoint.url + version + '/'
 
 
 def obtain_service_catalog(ctx):
@@ -233,16 +218,9 @@ def obtain_service_catalog(ctx):
     return service_catalog
 
 
-def format_url(url_template, values):
-    # Since we can't use keystone module, we can do similar thing:
-    # see https://github.com/openstack/keystone/blob/master/keystone/
-    # catalog/core.py#L42-L60
-    return url_template.replace('$(', '%(') % values
-
-
 def is_token_trust_scoped(auth_token):
     return 'OS-TRUST:trust' in client_for_admin().tokens.validate(auth_token)
 
 
 def get_client(ctx, all_projects=False):
-    return designate_client.Client(session=get_session_and_auth(ctx=ctx)['session'], all_projects=all_projects)
+    return designate_client.Client(session=get_session(ctx=ctx), all_projects=all_projects)
